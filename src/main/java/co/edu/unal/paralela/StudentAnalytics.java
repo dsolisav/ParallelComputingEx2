@@ -2,8 +2,11 @@ package co.edu.unal.paralela;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.HashMap;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -43,9 +46,15 @@ public final class StudentAnalytics {
      * @param studentArray Datos del estudiante para esta clase.
      * @return Edad promedio de los estudiantes registrados
      */
-    public double averageAgeOfEnrolledStudentsParallelStream(
-            final Student[] studentArray) {
-        throw new UnsupportedOperationException();
+    public double averageAgeOfEnrolledStudentsParallelStream(final Student[] studentArray) {
+        double averageAge = Arrays.stream(studentArray)
+        .parallel()
+        .filter(s -> s.checkIsCurrent())
+        .mapToDouble(s -> s.getAge())
+        .average()
+        .orElse(0.0);
+        
+        return averageAge;
     }
 
     /**
@@ -96,9 +105,20 @@ public final class StudentAnalytics {
      * @param studentArray Datos de estudiantes para la clase.
      * @return Nombre más comun de los estudiantes inactivos.
      */
-    public String mostCommonFirstNameOfInactiveStudentsParallelStream(
-            final Student[] studentArray) {
-        throw new UnsupportedOperationException();
+    public String mostCommonFirstNameOfInactiveStudentsParallelStream(final Student[] studentArray) {
+        String mostCommon = Arrays.stream(studentArray)
+        .parallel()
+        .filter(s -> !s.checkIsCurrent())  
+        .map(s -> s.getFirstName())        
+        .collect(Collectors.groupingBy(Function.identity(), Collectors.counting())) 
+        .entrySet()
+        .parallelStream()  
+        .max(Map.Entry.comparingByValue())  
+        .map(Map.Entry::getKey)             
+        .orElse(null);                         
+
+
+        return mostCommon;
     }
 
     /**
@@ -131,8 +151,8 @@ public final class StudentAnalytics {
      * @param studentArray Datos del estudiante para la clase.
      * @return Cantidad de calificacione sperdidas de estudiantes mayores de 20 años de edad.
      */
-    public int countNumberOfFailedStudentsOlderThan20ParallelStream(
-            final Student[] studentArray) {
-        throw new UnsupportedOperationException();
+    public int countNumberOfFailedStudentsOlderThan20ParallelStream(final Student[] studentArray) {
+        int cantidadPerdidos = (int) Arrays.stream(studentArray).parallel().filter(s -> !s.checkIsCurrent() && s.getAge() > 20 && s.getGrade() < 65).count();
+        return cantidadPerdidos;
     }
 }
